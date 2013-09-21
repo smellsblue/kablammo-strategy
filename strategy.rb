@@ -99,15 +99,40 @@ module DalekSec
     opponents.first
   end
 
+  def low_ammo?
+    my.ammo <= 3
+  end
+
   def dalek_turn
-    if !enemy
+    case dalek_mode
+    when :exterminate
+      exterminate_mode!
+    when :reload
+      reload_mode!
+    end
+  end
+
+  def exeterminate_mode!
+    if low_ammo?
+      self.dalek_mode = :reload
+      reload_mode!!
+    elsif !enemy
       dance
     elsif obscured? enemy
       move_towards! enemy
     elsif can_fire_at? enemy
-      fire! 0
+      fire! -1
     else
       aim_at! enemy
+    end
+  end
+
+  def reload_mode!
+    if my.ammo_full?
+      self.dalek_mode = :exterminate
+      exterminate_mode!
+    else
+      rest
     end
   end
 end

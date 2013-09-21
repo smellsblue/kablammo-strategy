@@ -1,27 +1,47 @@
 module DalekSec
-  attr_accessor :mode
-
-  def initialize_dalek
-    @mode = DalekSec::ExterminateMode.new self
-  end
+  attr_accessor :dalek_mode
 
   def pick_mode!
     if desperate?
-      self.mode = DalekSec::PanicMode.new self
+      self.dalek_mode = :panic
     elsif low_ammo?
-      self.mode = DalekSec::ReloadMode.new self
+      self.dalek_mode = :reload
     else
-      self.mode = DalekSec::ExterminateMode.new self
+      self.dalek_mode = :exterminate
     end
+  end
+
+  def mode_done?
+    case dalek_mode
+    when :panic
+      false
+    when :exterminate
+      desperate? || low_ammo?
+    when :reload
+      desperate? || my.ammo_full?
+    else
+      true
+    end
+  end
+
+  def dalek_mode_turn!
+    case dalek_mode
+    when :panic
+      panic_mode!
+    when :exterminate
+      exterminate_mode!
+    when :reload
+      reload_mode!
+    end
+  end
+
+  def dalek_turn
+    pick_mode! if mode_done?
+    dalek_mode_turn!
   end
 
   def enemy
     opponents.first
-  end
-
-  def dalek_turn
-    pick_mode! if mode.done?
-    mode.turn
   end
 
   def desperate?
@@ -32,61 +52,35 @@ module DalekSec
     my.ammo <= 3
   end
 
-  class Mode
-    attr_reader :me
-
-    def initialize(me)
-      @me = me
+  def panic_mode!
+    if my.ammo == 0
+      rest
+    elsif obscured? enemy
+      move_towards! enemy
+    elsif can_fire_at? enemy
+      fire! 0
+    else
+      aim_at! enemy
     end
   end
 
-  class PanicMode < DalekSec::Mode
-    def done?
-      false
-    end
-
-    def turn
-      if me.ammo == 0
-        me.rest
-      elsif me.obscured? enemy
-        me.move_towards! enemy
-      elsif me.can_fire_at? enemy
-        me.fire! 0
-      else
-        me.aim_at! enemy
-      end
+  def exterminate_mode!
+    if obscured? enemy
+      move_towards! enemy
+    elsif can_fire_at? enemy
+      fire! 0
+    else
+      aim_at! enemy
     end
   end
 
-  class ReloadMode < DalekSec::Mode
-    def done?
-      me.desperate? || me.ammo_full?
-    end
-
-    def turn
-      me.rest
-    end
-  end
-
-  class ExterminateMode < DalekSec::Mode
-    def done?
-      me.desperate? || me.low_ammo?
-    end
-
-    def turn
-      if me.obscured? enemy
-        me.move_towards! enemy
-      elsif me.can_fire_at? enemy
-        me.fire! 0
-      else
-        me.aim_at! enemy
-      end
-    end
+  def reload_mode!
+    rest
   end
 end
 
 include DalekSec
-initialize_dalek
+self.dalek_mode = :exterminate
 
 on_turn do
   dalek_turn

@@ -1,7 +1,7 @@
-class DalekSec
+module DalekSec
   attr_accessor :mode
 
-  def initialize(me)
+  def initialize_dalek
     @mode = DalekSec::ExterminateMode.new self
   end
 
@@ -19,7 +19,7 @@ class DalekSec
     opponents.first
   end
 
-  def turn
+  def dalek_turn
     pick_mode! if mode.done?
     mode.turn
   end
@@ -46,25 +46,25 @@ class DalekSec
     end
 
     def turn
-      if my.ammo == 0
-        rest
-      elsif obscured? enemy
-        move_towards! enemy
-      elsif can_fire_at? enemy
-        fire! 0
+      if me.ammo == 0
+        me.rest
+      elsif me.obscured? enemy
+        me.move_towards! enemy
+      elsif me.can_fire_at? enemy
+        me.fire! 0
       else
-        aim_at! enemy
+        me.aim_at! enemy
       end
     end
   end
 
   class ReloadMode < DalekSec::Mode
     def done?
-      me.desperate? || my.ammo_full?
+      me.desperate? || me.ammo_full?
     end
 
     def turn
-      rest
+      me.rest
     end
   end
 
@@ -74,19 +74,20 @@ class DalekSec
     end
 
     def turn
-      if obscured? enemy
-        move_towards! enemy
-      elsif can_fire_at? enemy
-        fire! 0
+      if me.obscured? enemy
+        me.move_towards! enemy
+      elsif me.can_fire_at? enemy
+        me.fire! 0
       else
-        aim_at! enemy
+        me.aim_at! enemy
       end
     end
   end
 end
 
-dalek_sec = DalekSec.new(self)
+include DalekSec
+initialize_dalek
 
 on_turn do
-  dalek_sec.turn
+  dalek_turn
 end

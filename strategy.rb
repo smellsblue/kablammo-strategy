@@ -113,9 +113,8 @@ module DalekSec
   end
 
   def exeterminate_mode!
-    if low_ammo?
-      self.dalek_mode = :reload
-      reload_mode!
+    if my.ammo == 0
+      rest
     elsif !enemy
       dance
     elsif obscured? enemy

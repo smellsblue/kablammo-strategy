@@ -24,7 +24,7 @@ class DalekSec
     mode.turn
   end
 
-  def desparate?
+  def desperate?
     my.armor <= 3
   end
 

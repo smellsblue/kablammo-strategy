@@ -1,72 +1,92 @@
-module DalekSec
-  module Aggressive
-    def hunt
-      x, y = robot.x, robot.y
-      return first_possible_move 'nesw' if x == 0
-      return first_possible_move 'eswn' if y == @battle.board.height - 1
-      return first_possible_move 'swne' if x == @battle.board.width - 1
-      return first_possible_move 'wnes' if y == 0
-      first_possible_move 'wsen'
-    end
+class DalekSec
+  attr_accessor :mode
 
-    def fire_at!(enemy, compensate = 0)
-      direction = robot.direction_to(enemy).round
-      skew = direction - robot.rotation
-      distance = robot.distance_to(enemy)
-      max_distance = Math.sqrt(board.height * board.height + board.width * board.width)
-      compensation = ( 10 - ( (10 - 3) * (distance / max_distance) ) ).round
-      compensation *= -1 if rand(0..1) == 0
-      skew += compensation if compensate > rand
-      fire! skew
-    end
+  def initialize(me)
+    @mode = DalekSec::ExterminateMode.new self
+  end
 
-    def act_aggressively
-      enemy = opponents.first
-      return hunt unless enemy
-      return rest if my.ammo == 0
-      return move_towards! enemy if obscured? enemy
-      return fire_at! enemy, 0.75 if can_fire_at? enemy
-      return aim_at! enemy unless aiming_at? enemy
-      move_towards! enemy
+  def pick_mode!
+    if desperate?
+      mode = DalekSec::PanicMode.new self
+    elsif low_ammo?
+      mode = DalekSec::ReloadMode.new self
+    else
+      mode = DalekSec::ExterminateMode.new self
     end
   end
 
-  module Defensive
-    def dance
-      first_possible_move %w(n s e w).shuffle
+  def enemy
+    opponents.first
+  end
+
+  def turn
+    pick_mode! if mode.done?
+    mode.turn
+  end
+
+  def desparate?
+    my.armor <= 3
+  end
+
+  def low_ammo?
+    my.ammo <= 3
+  end
+
+  class Mode
+    attr_reader :me
+
+    def initialize(me)
+      @me = me
+    end
+  end
+
+  class PanicMode < DalekSec::Mode
+    def done?
+      false
     end
 
-    def dodge(enemy)
-      toward = moves_toward enemy
-      d1 = enemy.distance_to robot.target_for(toward[1])
-      d2 = enemy.distance_to robot.target_for(toward[2])
-      if d1 > d2
-        moves = [ toward[1], toward[2], toward[3], toward[0] ]
+    def turn
+      if my.ammo == 0
+        rest
+      elsif obscured? enemy
+        move_towards! enemy
+      elsif can_fire_at? enemy
+        fire! 0
       else
-        moves = [ toward[2], toward[1], toward[3], toward[0] ]
+        aim_at! enemy
       end
-      first_possible_move moves
-    end
-
-    def act_defensively
-      enemy = opponents.first
-      return dance unless enemy
-      return dodge enemy if enemy.can_fire_at? me
-      return rest unless my.ammo_full?
-      move_away_from! enemy
     end
   end
 
-  include Aggressive
-  include Defensive
+  class ReloadMode < DalekSec::Mode
+    def done?
+      me.desperate? || my.ammo_full?
+    end
 
-  def dalek_turn
-    act_aggressively
+    def turn
+      rest
+    end
+  end
+
+  class ExterminateMode < DalekSec::Mode
+    def done?
+      me.desperate? || me.low_ammo?
+    end
+
+    def turn
+      if obscured? enemy
+        move_towards! enemy
+      elsif can_fire_at? enemy
+        fire! 0
+      else
+        aim_at! enemy
+      end
+    end
   end
 end
 
-include DalekSec
+dalek_sec = DalekSec.new(self)
 
 on_turn do
-  dalek_turn
+  dalek_sec.turn
 end

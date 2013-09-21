@@ -21,15 +21,15 @@ module DalekSec
   end
 
   def dalek_turn
-    if my.armor <= 3
-      if !@last_move || @last_move == :fire
-        @last_move = :dance
+    if my.armor <= 2
+      if !$last_move || $last_move == :fire
+        $last_move = :dance
         dance
-      elsif @last_move == :dance
-        @last_move = :aim
+      elsif $last_move == :dance
+        $last_move = :aim
         aim_at! enemy
-      elsif @last_move = :aim
-        @last_move = :fire
+      elsif $last_move = :aim
+        $last_move = :fire
         fire!((-1..1).to_a.shuffle.first)
       end
     else

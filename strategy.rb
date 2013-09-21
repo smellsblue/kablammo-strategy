@@ -22,15 +22,15 @@ module DalekSec
 
   def dalek_turn
     if my.armor <= 2
-      if !$last_move || $last_move == :fire
+      if !$last_move || $last_move != :dance
         $last_move = :dance
         dance
-      elsif $last_move == :dance
+      elsif can_fire_at? enemy
+        $last_move = :fire
+        fire!((-2..2).to_a.shuffle.first)
+      else
         $last_move = :aim
         aim_at! enemy
-      elsif $last_move = :aim
-        $last_move = :fire
-        fire!((-1..1).to_a.shuffle.first)
       end
     else
       if my.ammo == 0

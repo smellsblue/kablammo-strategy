@@ -82,12 +82,23 @@
 module DalekSec
   attr_accessor :dalek_mode
 
+  def hunt
+    x, y = robot.x, robot.y
+    return first_possible_move 'nesw' if x == 0
+    return first_possible_move 'eswn' if y == @battle.board.height - 1
+    return first_possible_move 'swne' if x == @battle.board.width - 1
+    return first_possible_move 'wnes' if y == 0
+    first_possible_move 'wsen'
+  end
+
   def enemy
     opponents.first
   end
 
   def dalek_turn
-    if obscured? enemy
+    if !enemy
+      hunt
+    elsif obscured? enemy
       move_towards! enemy
     elsif can_fire_at? enemy
       fire! 0

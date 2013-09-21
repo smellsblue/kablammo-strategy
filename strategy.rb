@@ -82,6 +82,10 @@
 module DalekSec
   attr_accessor :dalek_mode
 
+  def dance
+    first_possible_move %w(n s e w).shuffle
+  end
+
   def hunt
     x, y = robot.x, robot.y
     return first_possible_move 'nesw' if x == 0
@@ -97,7 +101,7 @@ module DalekSec
 
   def dalek_turn
     if !enemy
-      hunt
+      dance
     elsif obscured? enemy
       move_towards! enemy
     elsif can_fire_at? enemy

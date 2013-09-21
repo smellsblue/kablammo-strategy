@@ -82,6 +82,10 @@
 module DalekSec
   attr_accessor :dalek_mode
 
+  def enemy
+    opponents.first
+  end
+
   def dalek_turn
     if obscured? enemy
       move_towards! enemy

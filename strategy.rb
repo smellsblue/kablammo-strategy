@@ -41,7 +41,7 @@ module DalekSec
     elsif obscured? enemy
       move_towards! enemy
     elsif can_fire_at? enemy
-      fire_at! enemy, 0.75
+      fire_at! enemy, 0.1
     else
       aim_at! enemy
     end

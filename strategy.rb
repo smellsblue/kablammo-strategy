@@ -3,7 +3,7 @@ module DalekSec
     first_possible_move %w(n s e w).shuffle
   end
 
-  def hunt
+  def julia_hunt
     x, y = robot.x, robot.y
     return first_possible_move 'nesw' if x == 0
     return first_possible_move 'eswn' if y == @battle.board.height - 1
@@ -20,30 +20,30 @@ module DalekSec
     my.ammo <= 3
   end
 
+  def fire_at!(enemy, compensate = 0)
+    direction = robot.direction_to(enemy).round
+    skew = direction - robot.rotation
+    distance = robot.distance_to(enemy)
+    max_distance = Math.sqrt(board.height * board.height + board.width * board.width)
+    compensation = ( 10 - ( (10 - 3) * (distance / max_distance) ) ).round
+    compensation *= -1 if rand(0..1) == 0
+    skew += compensation if compensate > rand
+    fire! skew
+  end
+
+  # I give up... too hard to debug without a workable local server and
+  # no feedback from the live server that actually works :-(
   def dalek_turn
-    if my.armor <= 2
-      if !$last_move || $last_move != :dance
-        $last_move = :dance
-        dance
-      elsif can_fire_at? enemy
-        $last_move = :fire
-        fire!((-2..2).to_a.shuffle.first)
-      else
-        $last_move = :aim
-        aim_at! enemy
-      end
+    if my.ammo == 0
+      rest
+    elsif !enemy
+      dance
+    elsif obscured? enemy
+      move_towards! enemy
+    elsif can_fire_at? enemy
+      fire_at! enemy, 0.75
     else
-      if my.ammo == 0
-        rest
-      elsif !enemy
-        dance
-      elsif obscured? enemy
-        move_towards! enemy
-      elsif can_fire_at? enemy
-        fire!((-2..2).to_a.shuffle.first)
-      else
-        aim_at! enemy
-      end
+      aim_at! enemy
     end
   end
 end

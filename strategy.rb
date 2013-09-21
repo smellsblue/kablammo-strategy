@@ -7,11 +7,11 @@ class DalekSec
 
   def pick_mode!
     if desperate?
-      mode = DalekSec::PanicMode.new self
+      self.mode = DalekSec::PanicMode.new self
     elsif low_ammo?
-      mode = DalekSec::ReloadMode.new self
+      self.mode = DalekSec::ReloadMode.new self
     else
-      mode = DalekSec::ExterminateMode.new self
+      self.mode = DalekSec::ExterminateMode.new self
     end
   end
 
